@@ -1,6 +1,7 @@
 import React,{useState , useEffect} from "react";
 import { commerce } from "./Components/lib/Commerce_prod";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LoadingOverlay from 'react-loading-overlay';
 
 /* Importing Components */
 import CartScreen from './Components/Cart/CartScreen'
@@ -8,14 +9,44 @@ import Navbar from "./Components/Navbar";
 import PRODUCTS from "./Components/Products/products";
 import Checkout from "./Components/Checkout/Checkout";
 
+import './App.css'
+
 const App = () =>{
     const [products , setProducts] =  useState([]);
+    const [categories , setCategories] =  useState([]);
     const [cart,setCart] = useState({});
     const [order , setOrder] = useState({});
     const [errorMessage , setErrorMessage] = useState('');
+    const [loading , setloading] = useState(false);
+
     const fetchProducts = async () =>{
-        const { data } = await commerce.products.list(); 
-        setProducts(data);
+        setloading(true);
+        await commerce.products.list().then(({data})=>{
+            try{
+                setloading(false);
+                setProducts(data);
+            }
+            catch(err){
+                alert(err);
+            }
+        }); 
+        //const { data } = await commerce.products.list({category_slug: ['Electronics'],}); 
+        const {data: categoriesData} = await commerce.categories.list();
+        setCategories(categoriesData)
+        
+    }
+
+    const fetchByCategory = async( cat_name) =>{
+        setloading(true);
+         await commerce.products.list({category_slug: [cat_name]}).then(({data})=>{
+            try{
+                setloading(false);
+                setProducts(data);
+            }catch(err){
+
+            }
+        }); 
+        
     }
 
     const fetchCart = async () =>{
@@ -63,16 +94,31 @@ const App = () =>{
         }
 
     }
+
+
     useEffect(()=>{
+       
         fetchProducts();
         fetchCart();
+       // FetchCategoreis();
     },[] )
 
     
     return(
         <Router>
-            <div>   
-                <Navbar totalItems = {cart.total_items}/>
+            <div>
+                {loading? 
+                    <div className="overlay">   
+                    <LoadingOverlay active = {true} spinner text="loading" className='spinner'></LoadingOverlay>
+                    </div>
+                    :
+                    null
+                }
+                <Navbar totalItems = {cart.total_items} 
+                        fetchByCategory = {fetchByCategory}
+                        fetchProducts = {fetchProducts} 
+                        categories = {categories}/>
+                        
                 <Routes>
                     <Route exact path = "/" 
                        element = {<PRODUCTS  products = {products} onAddToCart = {handleAddToCart}/>}/>

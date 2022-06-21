@@ -11,12 +11,13 @@
 }
 
 .image{
-    margin-right: 10px;
+  margin-right: 10px;
   }
   
 .menuButton{
     margin-right: spacing(2);
-};
-.grow{
-    flex-grow: 1;
-  }
+}
+
+.cat_b{
+    margin-right: 30%;
+}
